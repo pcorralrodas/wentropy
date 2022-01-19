@@ -104,7 +104,7 @@ function _myNR(y,q,X){
 	tries  = 0
 	rseed(23736)
 	//Newton Rhapson
-	while (abs(change)>1e-15){	
+	while (abs(change)>1e-15 & tries<10){	
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
