@@ -1,0 +1,7 @@
+v 1
+d Materials by Paul Andres Corral Rodas, and Rodrigo Salcedo
+d World Bank
+d pcorralrodas@worldbank.org, rsalcedo@gmail.com
+d 
+ 
+p wentropy

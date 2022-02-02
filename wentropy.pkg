@@ -1,0 +1,8 @@
+v 1
+d 'wentropy': Stata command for weight calibration using maximum entropy
+d 
+d Distribution-Date: 2/2/2022
+d 
+d 
+F w/wentropy.ado
+F w/wentropy.sthlp
