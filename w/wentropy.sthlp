@@ -6,7 +6,7 @@
 {title:Title}
 
 {p2colset 5 24 26 2}{...}
-{p2col :{cmd:wentropy} {hline 1} Implements cross-entropy weight calibration}{p_end}
+{p2col :{cmd:wentropy} {hline 1} Implements cross-entropy weight calibration. Builds upon Martin Wittenberg's maxentropy command by implementing 2 different optimization techniques.}{p_end}
 {p2colreset}{...}
 
 {title:Syntax}

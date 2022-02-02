@@ -16,6 +16,8 @@ program define wentropy, eclass
 	#delimit cr		
 marksample touse
 
+local state = c(rngstate)
+	
 	//Send data to MATA
 	
 	//Data
@@ -65,7 +67,8 @@ marksample touse
 		lab var `newweight' "wentropy calibrated weights"
 	mata: st_store(., tokens("`newweight'"), "`touse'",_wentropy(y,q,X))
 	if (~missing("`poptotal'")) qui:replace `newweight' = `poptotal'*`newweight'
-	
+
+set rngstate `state'	
 end
 
 mata

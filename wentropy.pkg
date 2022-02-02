@@ -1,5 +1,5 @@
 v 1
-d 'wentropy': Stata command for weight calibration using maximum entropy
+d 'wentropy': Stata command for weight calibration using maximum entropy. Builds upon Martin Wittenberg's maxentropy command by implementing 2 different optimization techniques.
 d 
 d Distribution-Date: 2/2/2022
 d 
