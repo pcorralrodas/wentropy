@@ -11,7 +11,8 @@ program define wentropy, eclass
 	NEWweight(string)
 	constraints(name)
 	[OLDweight(varlist max=1 numeric) 
-	POPtotal(real 1)];
+	POPtotal(real 1)
+	technique(string auto)];
 	
 	#delimit cr		
 marksample touse
@@ -62,6 +63,16 @@ local state = c(rngstate)
 		error 198 
 		exit
 	}
+	//Check for valid optimizers
+	local technique  = lower("`optimizer'")
+	local optimizers auto nr dfp bfgs bhhh nm
+	local valid : list technique & optimizers
+	if (missing("`valid'")){
+		dis as error "Technique `technique' is not allowed, please see documentation"
+		error 198
+		exit
+	}
+	
 	
 	qui:gen double `newweight' = .
 		lab var `newweight' "wentropy calibrated weights"
@@ -74,27 +85,30 @@ end
 mata
 
 function _wentropy(y,q,X){	
-
-	p = _myNR(y,q,X)
-	//ALternative solution if _myNR didn't work
-	if(hasmissing(p)){
-		display("Newton-Rhapson didn't work")
-		display("Let me try something else...")
-		s=optimize_init()
-		optimize_init_evaluator(s,&_other_solver())
-		optimize_init_evaluatortype(s,"d2")
-		optimize_init_which(s,"min")
-		optimize_init_technique(s, "dfp")
-		optimize_init_singularHmethod(s, "hybrid")
-		optimize_init_argument(s,1,y)
-		optimize_init_argument(s,2,X)
-		optimize_init_argument(s,3,q)
-		optimize_init_conv_maxiter(s,10000)
-		optimize_init_params(s,J(1,rows(y),0))
-		B=optimize(s)'
-		eXl		= exp(-quadcross(X',B))
-		Omega	= mean(eXl, q)
-		p		= q :* eXl / Omega
+	auto = st_local("technique")=="auto"
+	
+	if (auto==1){
+		p = _myNR(y,q,X)
+		//ALternative solution if _myNR didn't work
+		if(hasmissing(p)){
+			display("Newton-Rhapson didn't work")
+			display("Let me try something else...")
+			s=optimize_init()
+			optimize_init_evaluator(s,&_other_solver())
+			optimize_init_evaluatortype(s,"d2")
+			optimize_init_which(s,"min")
+			optimize_init_technique(s, "dfp")
+			optimize_init_singularHmethod(s, "hybrid")
+			optimize_init_argument(s,1,y)
+			optimize_init_argument(s,2,X)
+			optimize_init_argument(s,3,q)
+			optimize_init_conv_maxiter(s,10000)
+			optimize_init_params(s,J(1,rows(y),0))
+			B=optimize(s)'
+			eXl		= exp(-quadcross(X',B))
+			Omega	= mean(eXl, q)
+			p		= q :* eXl / Omega
+		}
 	}
 	return(p)
 	
