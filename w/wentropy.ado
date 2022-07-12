@@ -73,9 +73,26 @@ end
 
 mata
 
-function _wentropy(y,q,X){	
+function _wentropy(y,q,X){
 
-	p = _myNR(y,q,X)
+	
+	s=optimize_init()
+	optimize_init_evaluator(s,&_other_solver())
+	optimize_init_evaluatortype(s,"d2")
+	optimize_init_which(s,"min")
+	optimize_init_technique(s, "nr")
+	optimize_init_singularHmethod(s, "hybrid")
+	optimize_init_argument(s,1,y)
+	optimize_init_argument(s,2,X)
+	optimize_init_argument(s,3,q)
+	optimize_init_conv_maxiter(s,100)
+	optimize_init_params(s,J(1,rows(y),0))
+	B=optimize(s)'
+	eXl		= exp(-quadcross(X',B))
+	Omega	= mean(eXl, q)
+	p		= q :* eXl / Omega
+
+	if(hasmissing(p)) p = _myNR(y,q,X)
 	//ALternative solution if _myNR didn't work
 	if(hasmissing(p)){
 		display("Newton-Rhapson didn't work")
@@ -89,13 +106,65 @@ function _wentropy(y,q,X){
 		optimize_init_argument(s,1,y)
 		optimize_init_argument(s,2,X)
 		optimize_init_argument(s,3,q)
-		optimize_init_conv_maxiter(s,10000)
+		optimize_init_conv_maxiter(s,100)
 		optimize_init_params(s,J(1,rows(y),0))
 		B=optimize(s)'
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
 	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "bfgs")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,100)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "bhhh")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,100)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "nm")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,100)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+
 	return(p)
 	
 }
@@ -107,7 +176,7 @@ function _myNR(y,q,X){
 	tries  = 0
 	rseed(23736)
 	//Newton Rhapson
-	while (abs(change)>1e-15 & tries<10){	
+	while (abs(change)>1e-10 & tries<10){	
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
@@ -124,19 +193,19 @@ function _myNR(y,q,X){
 		//Change to determine convergence
 		change=quadcross((bold-B),(bold-B))/(quadcross(bold,bold))
 		//Change starting values for B in case of problems
-		if (hasmissing(H) | allof(H,0) | hasmissing(g) ){
-			tries = tries+1
-			change = 10
-			if (tries==1)  B = J(rows(y),1,1)
-			if (tries==2)  B = J(rows(y),1,0)
-			if (tries>=3){
-				if (mod(tries,2)==0) S = 1
-				else S = -1
-				B = S*runiform(rows(y),1):*((tries-2)*10)
-			}
-			display("Tries :")
-			tries
-		}	
+		//if (hasmissing(H) | allof(H,0) | hasmissing(g) ){
+		//	tries = tries+1
+		//	change = 10
+		//	if (tries==1)  B = J(rows(y),1,1)
+		//	if (tries==2)  B = J(rows(y),1,0)
+		//	if (tries>=3){
+		//		if (mod(tries,2)==0) S = 1
+		//		else S = -1
+		//		B = S*runiform(rows(y),1):*((tries-2)*10)
+		//	}
+		//	display("Tries :")
+		//	tries
+		//}	
 	}
 	eXl		= exp(-quadcross(X',B))
 	Omega	= mean(eXl, q)
