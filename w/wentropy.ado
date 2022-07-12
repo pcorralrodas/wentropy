@@ -12,7 +12,11 @@ program define wentropy, eclass
 	constraints(name)
 	[OLDweight(varlist max=1 numeric) 
 	POPtotal(real 1)
+<<<<<<< Updated upstream
 	technique(string auto)];
+=======
+	iter(integer 10000)];
+>>>>>>> Stashed changes
 	
 	#delimit cr		
 marksample touse
@@ -76,7 +80,7 @@ local state = c(rngstate)
 	
 	qui:gen double `newweight' = .
 		lab var `newweight' "wentropy calibrated weights"
-	mata: st_store(., tokens("`newweight'"), "`touse'",_wentropy(y,q,X))
+	mata: st_store(., tokens("`newweight'"), "`touse'",_wentropy(y,q,X, `iter'))
 	if (~missing("`poptotal'")) qui:replace `newweight' = `poptotal'*`newweight'
 
 set rngstate `state'	
@@ -84,6 +88,7 @@ end
 
 mata
 
+<<<<<<< Updated upstream
 function _wentropy(y,q,X){	
 	auto = st_local("technique")=="auto"
 	
@@ -109,19 +114,115 @@ function _wentropy(y,q,X){
 			Omega	= mean(eXl, q)
 			p		= q :* eXl / Omega
 		}
+=======
+function _wentropy(y,q,X, iter){
+
+	p = _myNR(y,q,X,iter)
+
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "nr")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,iter)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}	
+	//ALternative solution if _myNR didn't work
+	if(hasmissing(p)){
+		display("Newton-Rhapson didn't work")
+		display("Let me try something else...")
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "dfp")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,iter)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "bfgs")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,iter)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "bhhh")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,iter)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+	}
+	if(hasmissing(p)){
+		s=optimize_init()
+		optimize_init_evaluator(s,&_other_solver())
+		optimize_init_evaluatortype(s,"d2")
+		optimize_init_which(s,"min")
+		optimize_init_technique(s, "nm")
+		optimize_init_singularHmethod(s, "hybrid")
+		optimize_init_argument(s,1,y)
+		optimize_init_argument(s,2,X)
+		optimize_init_argument(s,3,q)
+		optimize_init_conv_maxiter(s,iter)
+		optimize_init_params(s,J(1,rows(y),0))
+		B=optimize(s)'
+		eXl		= exp(-quadcross(X',B))
+		Omega	= mean(eXl, q)
+		p		= q :* eXl / Omega
+>>>>>>> Stashed changes
 	}
 	return(p)
 	
 }
 
-function _myNR(y,q,X){
-		iter   = 1
+function _myNR(y,q,X, iter){
 	change = 1
 	B      = J(rows(y),1,-1)
 	tries  = 0
 	rseed(23736)
 	//Newton Rhapson
+<<<<<<< Updated upstream
 	while (abs(change)>1e-15 & tries<10){	
+=======
+	while (abs(change)>1e-10 & tries<iter){	
+>>>>>>> Stashed changes
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
@@ -129,7 +230,7 @@ function _myNR(y,q,X){
 		g	    = y - mX'	        // gradient		
 		H	    = ((quadcross(p:* X, X) - quadcross(mX, mX)))	// Hessian	
 		//iteration counter
-		iter    = iter+1
+		tries    = tries+1
 		//Old lambdas (called here B)
 		bold    = B
 		//New lambdas (called here B)
