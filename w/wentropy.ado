@@ -19,9 +19,13 @@ program define wentropy, eclass
 marksample touse
 
 local state = c(rngstate)
+
+// Remove observations if prior is missing
+if ("`oldweight'"!=""){
+	replace `touse' = 0 if missing(`oldweight')
+}
 	
-	//Send data to MATA
-	
+	//Send data to MATA	
 	//Data
 	mata: st_view(X=.,.,"`varlist'","`touse'")
 	//Prior weights
