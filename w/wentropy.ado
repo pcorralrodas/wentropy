@@ -12,7 +12,8 @@ program define wentropy, eclass
 	constraints(name)
 	[OLDweight(varlist max=1 numeric) 
 	POPtotal(real 1)
-	iter(integer 10000)];
+	iter(integer 10000)
+	missok];
 	
 	#delimit cr		
 marksample touse
@@ -63,10 +64,16 @@ local state = c(rngstate)
 		error 198 
 		exit
 	}
+	if ("`missok'"!=""){
+		local miss = 1
+	}
+	else{
+		local miss = 0
+	}
 	
 	qui:gen double `newweight' = .
 		lab var `newweight' "wentropy calibrated weights"
-	mata: st_store(., tokens("`newweight'"), "`touse'",_wentropy(y,q,X, `iter'))
+	mata: st_store(., tokens("`newweight'"), "`touse'",_wentropy(y,q,X, `iter', `miss'))
 	if (~missing("`poptotal'")) qui:replace `newweight' = `poptotal'*`newweight'
 
 set rngstate `state'	
@@ -74,11 +81,12 @@ end
 
 mata
 
-function _wentropy(y,q,X, iter){
+function _wentropy(y,q,X, iter, miss){
 	display("Newton-Rhapson - Own")
 	p = _myNR(y,q,X,10)
 	//ALternative solution if _myNR didn't work
-	if (hasmissing(p)){
+	if (hasmissing(p) & miss==0){
+		quadsum((p:==.))
 		display("Broyden–Fletcher–Goldfarb–Shanno")
 		s=optimize_init()
 		optimize_init_evaluator(s,&_other_solver())
@@ -96,9 +104,12 @@ function _wentropy(y,q,X, iter){
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
-		if (quadsum(abs(g))>0.05) p = J(rows(p),1,.)
+		if (quadsum(abs(g))>0.05){
+			p = J(rows(p),1,.)
+			display("Sum of gradient over 0.5")
+		}
 	}
-	if (hasmissing(p)){
+	if (hasmissing(p) & miss==0){
 		display("Davidon–Fletcher–Powell")
 		s=optimize_init()
 		optimize_init_evaluator(s,&_other_solver())
@@ -116,9 +127,12 @@ function _wentropy(y,q,X, iter){
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
-		if (quadsum(abs(g))>0.05) p = J(rows(p),1,.)
+		if (quadsum(abs(g))>0.05){
+			p = J(rows(p),1,.)
+			display("Sum of gradient over 0.5")
+		}
 	}
-	if (hasmissing(p)){
+	if (hasmissing(p) & miss==0){
 		display("modified Newton–Raphson")
 		s=optimize_init()
 		optimize_init_evaluator(s,&_other_solver())
@@ -136,9 +150,12 @@ function _wentropy(y,q,X, iter){
 		eXl		= exp(-quadcross(X',B))
 		Omega	= mean(eXl, q)
 		p		= q :* eXl / Omega
-		if (quadsum(abs(g))>0.05) p = J(rows(p),1,.)
+		if (quadsum(abs(g))>0.05){
+			p = J(rows(p),1,.)
+			display("Sum of gradient over 0.5")
+		}
 	}	
-	if (hasmissing(p)) _error(999, "Convergence was not achieved")
+	if (hasmissing(p) & miss==0) _error(999, "Convergence was not achieved")
 	return(p)
 	
 }
@@ -183,7 +200,10 @@ function _myNR(y,q,X, iter){
 	eXl		= exp(-quadcross(X',B))
 	Omega	= mean(eXl, q)
 	p		= q :* eXl / Omega
-	if (quadsum(abs(g))>0.05) p = J(rows(p),1,.)
+	if (quadsum(abs(g))>0.05){
+		p = J(rows(p),1,.)
+		display("Sum of gradient over 0.05")
+	}
 	return(p)
 }
 
@@ -202,7 +222,6 @@ function _other_solver(todo, B,y,X,q,L,g,H){
 
 
 end
-
 
 
 
