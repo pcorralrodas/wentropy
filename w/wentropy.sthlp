@@ -17,6 +17,8 @@
 {opt constraints(matname)}
 [{opt OLDweight(varlist max=1 numeric)}
 {opt POPtotal(real 1)}
+{opt missok}
+{opt iter(integer 10000)}
 ]
 
 
@@ -40,6 +42,14 @@ calibrated by the smallest amount possible given the constraints.
 
 {phang}
 {opt POPtotal} Population total to rescale weights.
+
+{phang}
+{opt missok} Tells the command that it is ok to have observations with missing weights.
+
+{phang}
+{opt iter} Number of iterations for max likelihood optimization.
+
+
 
 
 
